@@ -13,7 +13,7 @@ from app.api.error_handlers import (
     validation_error_handler,
     value_error_handler,
 )
-from app.api.routers import chunks, documents, libraries
+from app.api.routers import chunks, documents, libraries, nodes
 from app.domain.exceptions import (
     EmptyLibraryError,
     EntityAlreadyExistsError,
@@ -40,6 +40,7 @@ app.add_middleware(
 app.include_router(libraries.router)
 app.include_router(documents.router)
 app.include_router(chunks.router)
+app.include_router(nodes.router)
 
 app.add_exception_handler(EntityNotFoundError, entity_not_found_handler)
 app.add_exception_handler(EntityAlreadyExistsError, entity_already_exists_handler)

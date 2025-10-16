@@ -35,7 +35,7 @@ class LibraryService:
         chunk_repo: ChunkRepository,
     ):
         self._library_repo = library_repo
-        self._document_repo = document_repo
+        self._document_repo = document_repo  
         self._chunk_repo = chunk_repo
         self._indexes: dict[UUID, VectorIndex] = {}
 
@@ -85,7 +85,7 @@ class LibraryService:
         return self._library_repo.update(library)
 
     def delete_library(self, library_id: UUID) -> None:
-        library = self.get_library(library_id)
+        self.get_library(library_id)
 
         documents = self._document_repo.list_by_library(library_id)
         for document in documents:
@@ -181,13 +181,13 @@ class LibraryService:
                 return False
             elif operator == "ne" and chunk_value == value:
                 return False
-            elif operator == "gt" and not (chunk_value > value):
+            elif operator == "gt" and not chunk_value > value:
                 return False
-            elif operator == "gte" and not (chunk_value >= value):
+            elif operator == "gte" and not chunk_value >= value:
                 return False
-            elif operator == "lt" and not (chunk_value < value):
+            elif operator == "lt" and not chunk_value < value:
                 return False
-            elif operator == "lte" and not (chunk_value <= value):
+            elif operator == "lte" and not chunk_value <= value:
                 return False
             elif operator == "in" and chunk_value not in value:
                 return False

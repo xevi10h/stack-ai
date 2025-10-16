@@ -1,12 +1,84 @@
 version: '3.8'
 
 services:
+  # Vector Database API
   vector-db-api:
     build: .
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - REPLICATION_ENABLED=false
     volumes:
       - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - temporal
+    networks:
+      - vector-db-network
     restart: unless-stopped
+
+  # Temporal Server (using auto-setup image for development)
+  temporal:
+    image: temporalio/auto-setup:latest
+    ports:
+      - "7233:7233"  # Temporal gRPC
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=postgresql
+    depends_on:
+      - postgresql
+    networks:
+      - vector-db-network
+
+  # Temporal UI
+  temporal-ui:
+    image: temporalio/ui:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - temporal
+    networks:
+      - vector-db-network
+
+  # PostgreSQL for Temporal
+  postgresql:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+      - POSTGRES_DB=temporal
+    ports:
+      - "5432:5432"
+    volumes:
+      - temporal-postgresql-data:/var/lib/postgresql/data
+    networks:
+      - vector-db-network
+
+  # Temporal Worker
+  worker:
+    build: .
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./app:/app/app
+    command: python -m app.infrastructure.temporal.worker
+    depends_on:
+      - temporal
+      - vector-db-api
+    networks:
+      - vector-db-network
+    restart: unless-stopped
+
+networks:
+  vector-db-network:
+    driver: bridge
+
+volumes:
+  temporal-postgresql-data:
