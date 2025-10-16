@@ -1,0 +1,31 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=1
+
+[MESSAGES CONTROL]
+# Disable specific warnings that are not relevant for this project
+disable=
+    too-few-public-methods,  # R0903: Pydantic models don't need many methods
+    missing-class-docstring,  # C0115: Allow classes without docstrings for simple DTOs
+    missing-module-docstring,  # C0114: Allow modules without docstrings
+    missing-function-docstring,  # C0116: Allow functions without docstrings
+    unused-argument,  # W0613: FastAPI/framework handlers often have required but unused params
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,db,app
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=120
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=10
