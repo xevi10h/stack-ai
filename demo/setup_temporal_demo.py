@@ -1,8 +1,3 @@
-"""
-Setup script for Temporal demo
-Creates a library with chunks for testing Temporal workflows
-"""
-
 import requests
 import cohere
 

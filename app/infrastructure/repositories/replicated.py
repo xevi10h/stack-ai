@@ -1,11 +1,3 @@
-"""
-Replicated Repository Wrappers
-
-These wrappers add replication capabilities to existing repositories.
-They delegate to the underlying repository for local storage and use
-ReplicationManager for async replication to follower nodes.
-"""
-
 import asyncio
 from typing import Any, Dict, List, Optional
 from uuid import UUID

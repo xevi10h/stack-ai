@@ -1,21 +1,3 @@
-"""
-Leader-Follower Architecture Implementation
-
-This module implements a simplified leader-follower (master-slave) architecture
-for high availability and read scalability.
-
-Key Components:
-- Node: Represents a database node (leader or follower)
-- ReplicationManager: Manages replication from leader to followers
-- HealthChecker: Monitors node health for failover
-- LeaderElection: Handles leader election when leader fails
-
-Design Decisions:
-- Async replication for better write performance
-- Quorum-based reads for strong consistency option
-- Heartbeat-based failure detection
-"""
-
 import asyncio
 import time
 from dataclasses import dataclass, field

@@ -1,13 +1,3 @@
-"""
-Temporal Worker
-
-The worker runs workflows and activities. It connects to the Temporal server
-and executes tasks from the task queue.
-
-NOTE: Workflow sandbox is disabled for demo purposes using TEMPORAL_WORKFLOW_SANDBOX_UNRESTRICTED.
-In production, you should enable the sandbox and configure proper restrictions.
-"""
-
 import asyncio
 import logging
 import os

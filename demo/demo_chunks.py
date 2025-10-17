@@ -5,8 +5,8 @@ from uuid import UUID
 # Cohere client
 co = cohere.Client("rQsWxQJOK89Gp87QHo6qnGtPiWerGJOxvdg59o5f")
 
-library_id = "2806b050-acf2-4e34-8375-54bccf0ee974"  # Replace
-document_id = "fe926d8f-223f-4eb2-a7df-5ea15ff0dcf2"  # Replace
+library_id = "67a67785-9992-4904-8238-98654458c5ca"  # Replace
+document_id = "d676dbb7-0137-4330-afaf-571135c8f61a"  # Replace
 
 # Sample texts from the paper
 texts = [

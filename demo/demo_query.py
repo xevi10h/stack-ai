@@ -3,7 +3,7 @@ import cohere
 
 co = cohere.Client("rQsWxQJOK89Gp87QHo6qnGtPiWerGJOxvdg59o5f")
 
-library_id = "2806b050-acf2-4e34-8375-54bccf0ee974"  # Replace
+library_id = "67a67785-9992-4904-8238-98654458c5ca"  # Replace
 
 # Query text
 query_text = "What is attention mechanism?"

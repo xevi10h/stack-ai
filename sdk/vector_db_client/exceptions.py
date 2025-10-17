@@ -1,8 +1,3 @@
-"""
-SDK Exceptions
-"""
-
-
 class VectorDBAPIError(Exception):
     """Base exception for all Vector DB API errors"""
 

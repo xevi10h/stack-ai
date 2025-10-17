@@ -1,10 +1,3 @@
-"""
-Temporal Workflows
-
-Workflows orchestrate activities and define the business logic.
-They are durable and can handle failures, retries, and long-running operations.
-"""
-
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
