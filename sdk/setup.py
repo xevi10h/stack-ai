@@ -4,8 +4,11 @@ Setup configuration for Vector Database Python SDK
 
 from setuptools import find_packages, setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+try:
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+except FileNotFoundError:
+    long_description = "Python client library for Vector Database API"
 
 setup(
     name="vector-db-client",

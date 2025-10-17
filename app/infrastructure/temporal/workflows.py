@@ -10,6 +10,7 @@ from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 from temporalio import workflow
+from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
     from app.infrastructure.temporal.activities import (
@@ -83,7 +84,7 @@ class QueryWorkflow:
                     index_library_activity,
                     index_params,
                     start_to_close_timeout=timedelta(minutes=10),
-                    retry_policy=workflow.RetryPolicy(
+                    retry_policy=RetryPolicy(
                         maximum_attempts=3,
                         initial_interval=timedelta(seconds=1),
                         maximum_interval=timedelta(seconds=10),
@@ -105,7 +106,7 @@ class QueryWorkflow:
                 query_library_activity,
                 query_params,
                 start_to_close_timeout=timedelta(seconds=30),
-                retry_policy=workflow.RetryPolicy(
+                retry_policy=RetryPolicy(
                     maximum_attempts=5,
                     initial_interval=timedelta(seconds=1),
                     maximum_interval=timedelta(seconds=10),
@@ -120,17 +121,9 @@ class QueryWorkflow:
                 f"Query workflow completed: {result.total_results} results in {result.query_time_ms:.2f}ms"
             )
 
-            # Wait for potential re-query signal
-            await workflow.wait_condition(
-                lambda: self._update_query_params is not None,
-                timeout=timedelta(hours=1),
-            )
-
-            # If we got an update signal, re-run with new params
-            if self._update_query_params:
-                workflow.logger.info("Re-running query with updated parameters")
-                return await self.run(self._update_query_params)
-
+            # Workflow completes successfully
+            # Note: In production, you could use continue-as-new for long-running workflows
+            # instead of recursive calls to avoid history size limits
             return result
 
         except Exception as e:
@@ -228,7 +221,7 @@ class BatchQueryWorkflow:
             batch_query_activity,
             query_params,
             start_to_close_timeout=timedelta(minutes=5),
-            retry_policy=workflow.RetryPolicy(maximum_attempts=3),
+            retry_policy=RetryPolicy(maximum_attempts=3),
         )
 
         self._completed_queries = len(results)

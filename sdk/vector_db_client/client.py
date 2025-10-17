@@ -170,7 +170,7 @@ class VectorDBClient:
         if tags is not None:
             data["tags"] = tags
 
-        response = self._request("PUT", f"/libraries/{library_id}", json=data)
+        response = self._request("PATCH", f"/libraries/{library_id}", json=data)
         return Library.from_dict(response)
 
     def delete_library(self, library_id: UUID) -> None:
@@ -274,7 +274,7 @@ class VectorDBClient:
         if language is not None:
             data["language"] = language
 
-        response = self._request("PUT", f"/documents/{document_id}", json=data)
+        response = self._request("PATCH", f"/documents/{document_id}", json=data)
         return Document.from_dict(response)
 
     def delete_document(self, document_id: UUID) -> None:
@@ -283,6 +283,7 @@ class VectorDBClient:
 
     def create_chunk(
         self,
+        library_id: UUID,
         document_id: UUID,
         text: str,
         embedding: List[float],
@@ -302,7 +303,11 @@ class VectorDBClient:
             "author": author,
             "tags": tags or [],
         }
-        response = self._request("POST", f"/documents/{document_id}/chunks", json=data)
+        response = self._request(
+            "POST",
+            f"/libraries/{library_id}/documents/{document_id}/chunks",
+            json=data,
+        )
         return Chunk.from_dict(response)
 
     def get_chunk(self, chunk_id: UUID) -> Chunk:
@@ -310,9 +315,11 @@ class VectorDBClient:
         response = self._request("GET", f"/chunks/{chunk_id}")
         return Chunk.from_dict(response)
 
-    def list_chunks(self, document_id: UUID) -> List[Chunk]:
+    def list_chunks(self, library_id: UUID, document_id: UUID) -> List[Chunk]:
         """List all chunks in a document"""
-        response = self._request("GET", f"/documents/{document_id}/chunks")
+        response = self._request(
+            "GET", f"/libraries/{library_id}/documents/{document_id}/chunks"
+        )
         return [Chunk.from_dict(chunk) for chunk in response]
 
     def update_chunk(
@@ -343,7 +350,7 @@ class VectorDBClient:
         if tags is not None:
             data["tags"] = tags
 
-        response = self._request("PUT", f"/chunks/{chunk_id}", json=data)
+        response = self._request("PATCH", f"/chunks/{chunk_id}", json=data)
         return Chunk.from_dict(response)
 
     def delete_chunk(self, chunk_id: UUID) -> None:

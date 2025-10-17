@@ -1,0 +1,46 @@
+import json
+import cohere
+
+co = cohere.Client("REDACTED_API_KEY_2")
+
+library_id = "17815267-0b06-4188-a6bb-8bb820576411"
+
+# Query text
+query_text = "What is attention mechanism?"
+
+# Generate query embedding
+print("Generating embedding for query...")
+response = co.embed(
+    texts=[query_text],
+    model="embed-english-light-v3.0",
+    input_type="search_query"
+)
+query_embedding = response.embeddings[0]
+
+# Create the query data
+query_data = {
+    "embedding": query_embedding,
+    "k": 10,
+    "metadata_filters": [
+        {
+            "field": "page_number",
+            "operator": "eq",
+            "value": 1
+        },
+        {
+            "field": "tags",
+            "operator": "contains",
+            "value": "introduction"
+        }
+    ]
+}
+
+# Generate curl command
+curl_command = f"""curl -X POST http://localhost:8000/libraries/{library_id}/query \\
+  -H "Content-Type: application/json" \\
+  -d '{json.dumps(query_data)}'"""
+
+print("\nHere's your curl command with a real embedding:\n")
+print(curl_command)
+print("\n\nOr use this formatted JSON:\n")
+print(json.dumps(query_data, indent=2))

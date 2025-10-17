@@ -14,7 +14,7 @@ from temporalio.client import Client
 from app.infrastructure.temporal.workflows import QueryWorkflow, QueryWorkflowParams
 
 
-def generate_random_embedding(dimension: int) -> list[float]:
+def generate_random_embedding(dimension: int = 1024) -> list[float]:
     """Generate a random embedding vector"""
     return [random.random() for _ in range(dimension)]
 
@@ -36,8 +36,8 @@ async def main():
     # Create workflow parameters
     workflow_id = f"query-workflow-{uuid4()}"
     params = QueryWorkflowParams(
-        library_id="YOUR_LIBRARY_ID_HERE",  # Replace with actual library ID
-        query_embedding=generate_random_embedding(128),
+        library_id="8ea05217-d498-42c0-b575-ac2dbfde8f39",  # Replace with actual library ID
+        query_embedding=generate_random_embedding(),  # Uses default 1024 dimensions
         k=10,
         auto_index=False,  # Set to True to auto-index before querying
         index_type="hnsw",
@@ -73,49 +73,26 @@ async def main():
     print(f"Status after processing: {status}")
     print()
 
-    # Get the result
-    try:
-        result = await handle.query(QueryWorkflow.get_result)
-        if result:
-            print("Query Result:")
-            print(f"  Total results: {result['total_results']}")
-            print(f"  Query time: {result['query_time_ms']:.2f}ms")
-            print()
-
-            # Show first few results
-            for i, res in enumerate(result["results"][:3], 1):
-                print(f"  Result {i}:")
-                print(f"    Score: {res['score']:.4f}")
-                print(f"    Text: {res['chunk']['text'][:100]}...")
-                print()
-    except Exception as e:
-        print(f"Error getting result: {e}")
-        print()
-
-    # Example: Send a signal to update query parameters
-    print("Sending signal to update query...")
-    new_params = QueryWorkflowParams(
-        library_id=params.library_id,
-        query_embedding=generate_random_embedding(128),
-        k=20,  # Changed k
-        auto_index=False,
-    )
-
-    await handle.signal(QueryWorkflow.update_query, new_params)
-    print("✓ Signal sent")
-    print()
-
     # Wait for workflow to complete
     print("Waiting for workflow to complete...")
     try:
         final_result = await handle.result()
-        print("✓ Workflow completed")
-        print(f"Final result: {final_result.total_results} results")
+        print("✓ Workflow completed successfully!")
+        print(f"  Total results: {final_result.total_results}")
+        print(f"  Query time: {final_result.query_time_ms:.2f}ms")
+        print()
+
+        # Show first few results
+        print("Top results:")
+        for i, res in enumerate(final_result.results[:3], 1):
+            print(f"  {i}. Score: {res['score']:.4f}")
+            print(f"     Text: {res['text'][:80]}...")
+            print()
     except Exception as e:
-        print(f"Workflow failed: {e}")
+        print(f"✗ Workflow failed: {e}")
         error = await handle.query(QueryWorkflow.get_error)
         if error:
-            print(f"Error details: {error}")
+            print(f"  Error details: {error}")
 
     print()
     print("Example completed!")
@@ -133,17 +110,17 @@ async def batch_query_example():
     queries = [
         QueryWorkflowParams(
             library_id="library-1",
-            query_embedding=generate_random_embedding(128),
+            query_embedding=generate_random_embedding(),
             k=10,
         ),
         QueryWorkflowParams(
             library_id="library-2",
-            query_embedding=generate_random_embedding(128),
+            query_embedding=generate_random_embedding(),
             k=5,
         ),
         QueryWorkflowParams(
             library_id="library-3",
-            query_embedding=generate_random_embedding(128),
+            query_embedding=generate_random_embedding(),
             k=15,
         ),
     ]
