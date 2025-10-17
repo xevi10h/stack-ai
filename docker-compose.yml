@@ -13,7 +13,8 @@ services:
       - ./app:/app/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
-      - temporal
+      temporal:
+        condition: service_healthy
     networks:
       - vector-db-network
     restart: unless-stopped
@@ -24,15 +25,22 @@ services:
     ports:
       - "7233:7233"  # Temporal gRPC
     environment:
-      - DB=postgresql
+      - DB=postgres12
       - DB_PORT=5432
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=postgresql
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
     networks:
       - vector-db-network
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # Temporal UI
   temporal-ui:
@@ -60,6 +68,11 @@ services:
       - temporal-postgresql-data:/var/lib/postgresql/data
     networks:
       - vector-db-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Temporal Worker
   worker:
@@ -70,8 +83,10 @@ services:
       - ./app:/app/app
     command: python -m app.infrastructure.temporal.worker
     depends_on:
-      - temporal
-      - vector-db-api
+      temporal:
+        condition: service_healthy
+      vector-db-api:
+        condition: service_started
     networks:
       - vector-db-network
     restart: unless-stopped

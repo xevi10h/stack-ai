@@ -12,9 +12,6 @@ from uuid import UUID
 
 from temporalio import activity
 
-from app.api.dependencies import get_chunk_service, get_library_service
-from app.api.dto import MetadataFilter
-
 
 @dataclass
 class QueryLibraryParams:
@@ -52,6 +49,10 @@ async def query_library_activity(params: QueryLibraryParams) -> QueryLibraryResu
     It's idempotent - running it multiple times with the same input
     produces the same result.
     """
+    # Import inside activity to avoid loading in workflow sandbox
+    from app.api.dependencies import get_chunk_service, get_library_service
+    from app.api.dto import MetadataFilter
+
     activity.logger.info(
         f"Querying library {params.library_id} with k={params.k}, "
         f"index_type={params.index_type if hasattr(params, 'index_type') else 'default'}"
@@ -123,6 +124,9 @@ async def index_library_activity(params: IndexLibraryParams) -> Dict[str, Any]:
 
     This is a long-running operation that can be retried if it fails.
     """
+    # Import inside activity to avoid loading in workflow sandbox
+    from app.api.dependencies import get_library_service
+
     activity.logger.info(
         f"Indexing library {params.library_id} with type {params.index_type}"
     )

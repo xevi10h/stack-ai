@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 async def run_worker(
-    temporal_host: str = "localhost:7233", task_queue: str = "vector-db-queue"
+    temporal_host: str = "temporal:7233", task_queue: str = "vector-db-queue"
 ):
     """
     Start the Temporal worker
