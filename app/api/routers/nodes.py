@@ -1,9 +1,3 @@
-"""
-Node Management API
-
-Endpoints for managing cluster nodes, replication, and health checking.
-"""
-
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status

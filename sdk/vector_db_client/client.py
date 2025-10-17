@@ -1,9 +1,3 @@
-"""
-Vector Database Client
-
-Main client class for interacting with the Vector Database API.
-"""
-
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 

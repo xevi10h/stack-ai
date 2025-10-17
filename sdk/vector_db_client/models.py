@@ -1,9 +1,3 @@
-"""
-SDK Data Models
-
-These mirror the API response models for type safety and autocomplete.
-"""
-
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID

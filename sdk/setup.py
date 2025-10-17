@@ -1,7 +1,3 @@
-"""
-Setup configuration for Vector Database Python SDK
-"""
-
 from setuptools import find_packages, setup
 
 try:

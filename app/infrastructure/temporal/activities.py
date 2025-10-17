@@ -1,10 +1,3 @@
-"""
-Temporal Activities
-
-Activities are the building blocks of Temporal workflows.
-Each activity performs a specific task and can be retried on failure.
-"""
-
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
