@@ -3,7 +3,7 @@ import cohere
 
 co = cohere.Client("REDACTED_API_KEY_2")
 
-library_id = "17815267-0b06-4188-a6bb-8bb820576411"  # Replace
+library_id = "2806b050-acf2-4e34-8375-54bccf0ee974"  # Replace
 
 # Query text
 query_text = "What is attention mechanism?"
