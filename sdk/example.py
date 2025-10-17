@@ -63,6 +63,7 @@ def main():
 
     for i, text in enumerate(chunk_texts):
         chunk = client.create_chunk(
+            library_id=library.id,
             document_id=document.id,
             text=text,
             embedding=generate_random_embedding(128),
@@ -97,9 +98,9 @@ def main():
     for i, result in enumerate(results, 1):
         print(f"Result {i}:")
         print(f"  Score: {result.score:.4f}")
-        print(f"  Text: {result.chunk.text}")
-        print(f"  Source: {result.chunk.metadata.source}")
-        print(f"  Page: {result.chunk.metadata.page_number}")
+        print(f"  Text: {result.text}")
+        print(f"  Source: {result.metadata.get('source', 'N/A')}")
+        print(f"  Page: {result.metadata.get('page_number', 'N/A')}")
         print()
 
     # Query with metadata filtering

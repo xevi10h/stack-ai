@@ -3,10 +3,17 @@ Temporal Worker
 
 The worker runs workflows and activities. It connects to the Temporal server
 and executes tasks from the task queue.
+
+NOTE: Workflow sandbox is disabled for demo purposes using TEMPORAL_WORKFLOW_SANDBOX_UNRESTRICTED.
+In production, you should enable the sandbox and configure proper restrictions.
 """
 
 import asyncio
 import logging
+import os
+
+# Disable workflow sandbox for demo (allows all Python operations)
+os.environ["TEMPORAL_WORKFLOW_SANDBOX_UNRESTRICTED"] = "true"
 
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -23,15 +30,19 @@ logger = logging.getLogger(__name__)
 
 
 async def run_worker(
-    temporal_host: str = "temporal:7233", task_queue: str = "vector-db-queue"
+    temporal_host: str = None, task_queue: str = "vector-db-queue"
 ):
     """
     Start the Temporal worker
 
     Args:
-        temporal_host: Temporal server address
+        temporal_host: Temporal server address (defaults to localhost:7233 or TEMPORAL_HOST env var)
         task_queue: Name of the task queue to poll
     """
+    # Use environment variable or default to localhost for local development
+    if temporal_host is None:
+        temporal_host = os.getenv("TEMPORAL_HOST", "localhost:7233")
+
     logger.info(f"Connecting to Temporal server at {temporal_host}")
 
     # Connect to Temporal server

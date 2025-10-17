@@ -49,67 +49,41 @@ async def query_library_activity(params: QueryLibraryParams) -> QueryLibraryResu
     It's idempotent - running it multiple times with the same input
     produces the same result.
     """
-    # Import inside activity to avoid loading in workflow sandbox
-    from app.api.dependencies import get_chunk_service, get_library_service
-    from app.api.dto import MetadataFilter
+    # Use HTTP to call the API (activities run in separate process from API)
+    import requests
 
     activity.logger.info(
-        f"Querying library {params.library_id} with k={params.k}, "
-        f"index_type={params.index_type if hasattr(params, 'index_type') else 'default'}"
+        f"Querying library {params.library_id} with k={params.k}"
     )
 
     try:
-        library_service = get_library_service()
+        # Call the API via HTTP
+        api_url = "http://localhost:8000"
+        query_data = {
+            "embedding": params.query_embedding,
+            "k": params.k,
+            "metadata_filters": params.metadata_filters,
+        }
 
-        # Convert filters
-        filters = None
-        if params.metadata_filters:
-            filters = [
-                MetadataFilter(
-                    field=f["field"], operator=f["operator"], value=f["value"]
-                )
-                for f in params.metadata_filters
-            ]
-
-        # Query the library
-        results, query_time = library_service.query_library(
-            library_id=UUID(params.library_id),
-            query_embedding=params.query_embedding,
-            k=params.k,
-            metadata_filters=filters,
+        response = requests.post(
+            f"{api_url}/libraries/{params.library_id}/query",
+            json=query_data,
+            timeout=30
         )
 
-        # Convert results to dicts
-        result_dicts = []
-        chunk_service = get_chunk_service()
+        if response.status_code != 200:
+            raise Exception(f"API returned {response.status_code}: {response.text}")
 
-        for chunk, score in results:
-            result_dicts.append(
-                {
-                    "chunk": {
-                        "id": str(chunk.id),
-                        "document_id": str(chunk.document_id),
-                        "text": chunk.text,
-                        "embedding": chunk.embedding,
-                        "metadata": {
-                            "source": chunk.metadata.source,
-                            "page_number": chunk.metadata.page_number,
-                            "author": chunk.metadata.author,
-                            "tags": chunk.metadata.tags,
-                            "created_at": chunk.metadata.created_at.isoformat(),
-                        },
-                        "position": chunk.position,
-                    },
-                    "score": score,
-                }
-            )
+        result = response.json()
 
         activity.logger.info(
-            f"Query completed: {len(results)} results in {query_time:.2f}ms"
+            f"Query completed: {result['total_results']} results in {result['query_time_ms']:.2f}ms"
         )
 
         return QueryLibraryResult(
-            results=result_dicts, query_time_ms=query_time, total_results=len(results)
+            results=result['results'],
+            query_time_ms=result['query_time_ms'],
+            total_results=result['total_results']
         )
 
     except Exception as e:
@@ -124,31 +98,36 @@ async def index_library_activity(params: IndexLibraryParams) -> Dict[str, Any]:
 
     This is a long-running operation that can be retried if it fails.
     """
-    # Import inside activity to avoid loading in workflow sandbox
-    from app.api.dependencies import get_library_service
+    # Use HTTP to call the API (activities run in separate process from API)
+    import requests
 
     activity.logger.info(
         f"Indexing library {params.library_id} with type {params.index_type}"
     )
 
     try:
-        library_service = get_library_service()
-
         start_time = time.time()
 
-        # Index the library
-        library = library_service.index_library(
-            library_id=UUID(params.library_id), index_type=params.index_type
+        # Call the API via HTTP
+        api_url = "http://localhost:8000"
+        response = requests.post(
+            f"{api_url}/libraries/{params.library_id}/index",
+            json={"index_type": params.index_type},
+            timeout=600  # 10 minutes for indexing
         )
 
+        if response.status_code != 200:
+            raise Exception(f"API returned {response.status_code}: {response.text}")
+
+        library = response.json()
         elapsed_time = (time.time() - start_time) * 1000
 
         activity.logger.info(f"Indexing completed in {elapsed_time:.2f}ms")
 
         return {
-            "library_id": str(library.id),
-            "index_type": library.index_type,
-            "is_indexed": library.is_indexed,
+            "library_id": library["id"],
+            "index_type": library["index_type"],
+            "is_indexed": library["is_indexed"],
             "elapsed_time_ms": elapsed_time,
         }
 

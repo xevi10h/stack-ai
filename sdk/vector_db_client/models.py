@@ -69,9 +69,29 @@ class Library:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Library":
+        # API returns flat structure, not nested metadata
+        metadata = LibraryMetadata(
+            name=data.get("name", ""),
+            description=data.get("description"),
+            tags=data.get("tags", []),
+            embedding_dimension=data.get("embedding_dimension", 0),
+            total_documents=data.get("total_documents", 0),
+            total_chunks=data.get("total_chunks", 0),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else None
+            ),
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if "updated_at" in data
+                else None
+            ),
+        )
+
         return cls(
             id=UUID(data["id"]),
-            metadata=LibraryMetadata.from_dict(data["metadata"]),
+            metadata=metadata,
             is_indexed=data.get("is_indexed", False),
             index_type=data.get("index_type"),
             document_ids=[UUID(doc_id) for doc_id in data.get("document_ids", [])],
@@ -133,10 +153,29 @@ class Document:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Document":
+        # API returns flat structure, not nested metadata
+        metadata = DocumentMetadata(
+            title=data.get("title", ""),
+            source=data.get("source", ""),
+            author=data.get("author"),
+            tags=data.get("tags", []),
+            language=data.get("language"),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else None
+            ),
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if "updated_at" in data
+                else None
+            ),
+        )
+
         return cls(
             id=UUID(data["id"]),
             library_id=UUID(data["library_id"]),
-            metadata=DocumentMetadata.from_dict(data["metadata"]),
+            metadata=metadata,
             chunk_ids=[UUID(chunk_id) for chunk_id in data.get("chunk_ids", [])],
         )
 
@@ -190,12 +229,25 @@ class Chunk:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Chunk":
+        # API returns flat structure, not nested metadata
+        metadata = ChunkMetadata(
+            source=data.get("source", ""),
+            page_number=data.get("page_number"),
+            author=data.get("author"),
+            tags=data.get("tags", []),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else None
+            ),
+        )
+
         return cls(
             id=UUID(data["id"]),
             document_id=UUID(data["document_id"]),
             text=data["text"],
             embedding=data["embedding"],
-            metadata=ChunkMetadata.from_dict(data["metadata"]),
+            metadata=metadata,
             position=data["position"],
         )
 
@@ -211,10 +263,26 @@ class MetadataFilter:
 
 
 class QueryResult:
-    def __init__(self, chunk: Chunk, score: float):
-        self.chunk = chunk
+    def __init__(
+        self,
+        chunk_id: UUID,
+        document_id: UUID,
+        text: str,
+        score: float,
+        metadata: Dict[str, Any],
+    ):
+        self.chunk_id = chunk_id
+        self.document_id = document_id
+        self.text = text
         self.score = score
+        self.metadata = metadata
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "QueryResult":
-        return cls(chunk=Chunk.from_dict(data["chunk"]), score=data["score"])
+        return cls(
+            chunk_id=UUID(data["chunk_id"]),
+            document_id=UUID(data["document_id"]),
+            text=data["text"],
+            score=data["score"],
+            metadata=data.get("metadata", {}),
+        )
