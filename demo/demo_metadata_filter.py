@@ -3,7 +3,7 @@ import cohere
 
 co = cohere.Client("rQsWxQJOK89Gp87QHo6qnGtPiWerGJOxvdg59o5f")
 
-library_id = "17815267-0b06-4188-a6bb-8bb820576411"
+library_id = "2806b050-acf2-4e34-8375-54bccf0ee974"
 
 # Query text
 query_text = "What is attention mechanism?"
@@ -22,12 +22,12 @@ query_embedding = response.embeddings[0]
 print("\nSearching library with metadata filters...")
 query_data = {
     "embedding": query_embedding,
-    "k": 10,
+    "k": 100,  # Large k to get all matching chunks
     "metadata_filters": [
         {
             "field": "page_number",
             "operator": "eq",
-            "value": 1
+            "value": 2
         },
         {
             "field": "tags",
@@ -48,8 +48,8 @@ if response.status_code == 200:
     query_time_ms = result.get('query_time_ms', 0)
     total_results = result.get('total_results', 0)
 
-    print(f"\nWith metadata filtering (page_number=1, tags contains 'introduction'):")
-    print(f"Found {total_results} relevant chunks in {query_time_ms:.2f}ms:\n")
+    print(f"\nWith metadata filtering (page_number=1 AND tags contains 'introduction'):")
+    print(f"Found {total_results} matching chunks in {query_time_ms:.2f}ms:\n")
 
     if 'results' in result and result['results']:
         for i, res in enumerate(result['results'], 1):

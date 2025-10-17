@@ -44,7 +44,8 @@ class HNSWIndex(VectorIndex):
             current_dist, current = heapq.heappop(candidates)
             current_dist = -current_dist
 
-            if current_dist > -w[0][0]:
+            # Only break if we have enough candidates and current is too far
+            if len(w) >= ef and current_dist > -w[0][0]:
                 break
 
             if layer not in self._graph or current not in self._graph[layer]:

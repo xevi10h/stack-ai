@@ -5,8 +5,8 @@ from uuid import UUID
 # Cohere client
 co = cohere.Client("rQsWxQJOK89Gp87QHo6qnGtPiWerGJOxvdg59o5f")
 
-library_id = "17815267-0b06-4188-a6bb-8bb820576411"  # Replace
-document_id = "373b364f-9c9a-4cab-9248-84e2a907669b"  # Replace
+library_id = "2806b050-acf2-4e34-8375-54bccf0ee974"  # Replace
+document_id = "fe926d8f-223f-4eb2-a7df-5ea15ff0dcf2"  # Replace
 
 # Sample texts from the paper
 texts = [
@@ -33,7 +33,7 @@ for i, (text, embedding) in enumerate(zip(texts, embeddings)):
         "text": text,
         "embedding": embedding,
         "source": "arxiv.pdf",
-        "page_number": 1,
+        "page_number": i + 1,  # Each chunk on a different page (1, 2, 3, 4, 5)
         "author": "Vaswani et al.",
         "tags": ["introduction"],
         "position": i

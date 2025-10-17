@@ -36,7 +36,7 @@ async def main():
     # Create workflow parameters
     workflow_id = f"query-workflow-{uuid4()}"
     params = QueryWorkflowParams(
-        library_id="8ea05217-d498-42c0-b575-ac2dbfde8f39",  # Replace with actual library ID
+        library_id="8655743f-9456-4adf-80dc-c1e90956480f",  # Replace with actual library ID
         query_embedding=generate_random_embedding(),  # Uses default 1024 dimensions
         k=10,
         auto_index=False,  # Set to True to auto-index before querying
