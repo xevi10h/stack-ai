@@ -3,10 +3,10 @@ import cohere
 from uuid import UUID
 
 # Cohere client
-co = cohere.Client("REDACTED_API_KEY_2")
+co = cohere.Client("cohere_api_key")
 
-library_id = "67a67785-9992-4904-8238-98654458c5ca"  # Replace
-document_id = "d676dbb7-0137-4330-afaf-571135c8f61a"  # Replace
+library_id = "library_id"  # Replace
+document_id = "document_id"  # Replace
 
 # Sample texts from the paper
 texts = [
@@ -31,7 +31,6 @@ print(f"Creating {len(texts)} chunks...")
 for i, (text, embedding) in enumerate(zip(texts, embeddings)):
     chunk_data = {
         "text": text,
-        "embedding": embedding,
         "source": "arxiv.pdf",
         "page_number": i + 1,  # Each chunk on a different page (1, 2, 3, 4, 5)
         "author": "Vaswani et al.",

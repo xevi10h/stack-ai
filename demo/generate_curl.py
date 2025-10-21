@@ -1,9 +1,9 @@
 import json
 import cohere
 
-co = cohere.Client("REDACTED_API_KEY_2")
+co = cohere.Client("cohere_api_key")
 
-library_id = "17815267-0b06-4188-a6bb-8bb820576411"
+library_id = "library_id"  # Replace
 
 # Query text
 query_text = "What is attention mechanism?"

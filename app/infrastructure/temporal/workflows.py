@@ -21,7 +21,7 @@ class QueryWorkflowParams:
     """Parameters for the query workflow"""
 
     library_id: str
-    query_embedding: List[float]
+    query_text: str
     k: int = 10
     metadata_filters: Optional[List[Dict[str, Any]]] = None
     auto_index: bool = False
@@ -55,7 +55,7 @@ class QueryWorkflow:
         Main workflow execution
 
         Args:
-            params: Query parameters including library_id, query_embedding, k, etc.
+            params: Query parameters including library_id, query_text, k, etc.
 
         Returns:
             QueryLibraryResult with search results and metadata
@@ -90,9 +90,9 @@ class QueryWorkflow:
             self._status = "querying"
             query_params = QueryLibraryParams(
                 library_id=params.library_id,
-                query_embedding=params.query_embedding,
+                query_text=params.query_text,
                 k=params.k,
-                metadata_filters=params.metadata_filters,
+                metadata_filters=params.metadata_filters
             )
 
             result = await workflow.execute_activity(
@@ -202,7 +202,7 @@ class BatchQueryWorkflow:
         query_params = [
             QueryLibraryParams(
                 library_id=q.library_id,
-                query_embedding=q.query_embedding,
+                query_text=q.query_text,
                 k=q.k,
                 metadata_filters=q.metadata_filters,
             )

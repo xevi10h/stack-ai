@@ -6,17 +6,11 @@ vector database queries with automatic retries, signals, and queries.
 """
 
 import asyncio
-import random
 from uuid import uuid4
 
 from temporalio.client import Client
 
 from app.infrastructure.temporal.workflows import QueryWorkflow, QueryWorkflowParams
-
-
-def generate_random_embedding(dimension: int = 1024) -> list[float]:
-    """Generate a random embedding vector"""
-    return [random.random() for _ in range(dimension)]
 
 
 async def main():
@@ -36,11 +30,11 @@ async def main():
     # Create workflow parameters
     workflow_id = f"query-workflow-{uuid4()}"
     params = QueryWorkflowParams(
-        library_id="1051c85e-51d9-47df-8b9d-a3fc02b06921",  # Replace with actual library ID
-        query_embedding=generate_random_embedding(),  # Uses default 1024 dimensions
+        library_id="7297d892-1d28-425c-aa78-7d60d362a968",  # Replace with actual library ID
+        query_text="What is machine learning?",  # Your search query
         k=10,
         auto_index=False,  # Set to True to auto-index before querying
-        index_type="hnsw",
+        index_type="hnsw"
     )
 
     print(f"Starting workflow: {workflow_id}")
@@ -110,17 +104,17 @@ async def batch_query_example():
     queries = [
         QueryWorkflowParams(
             library_id="library-1",
-            query_embedding=generate_random_embedding(),
+            query_text="What is machine learning?",
             k=10,
         ),
         QueryWorkflowParams(
             library_id="library-2",
-            query_embedding=generate_random_embedding(),
+            query_text="How does deep learning work?",
             k=5,
         ),
         QueryWorkflowParams(
             library_id="library-3",
-            query_embedding=generate_random_embedding(),
+            query_text="What are neural networks?",
             k=15,
         ),
     ]

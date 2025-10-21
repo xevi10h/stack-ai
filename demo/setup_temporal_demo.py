@@ -1,9 +1,6 @@
 import requests
 import cohere
 
-# Cohere client
-co = cohere.Client("REDACTED_API_KEY_2")
-
 # API endpoint
 API_BASE = "http://localhost:8000"
 
@@ -61,23 +58,11 @@ texts = [
     "Self-attention relates different positions of a single sequence to compute a representation.",
 ]
 
-# Generate embeddings
-print("3. Generating embeddings with Cohere...")
-response = co.embed(
-    texts=texts,
-    model="embed-english-v3.0",
-    input_type="search_document"
-)
-embeddings = response.embeddings
-print(f"✓ Generated {len(embeddings)} embeddings")
-print()
-
 # Create chunks
 print("4. Creating chunks...")
-for i, (text, embedding) in enumerate(zip(texts, embeddings)):
+for i, text in enumerate(texts):
     chunk_data = {
         "text": text,
-        "embedding": embedding,
         "source": "arxiv.pdf",
         "page_number": 1,
         "author": "Vaswani et al.",
