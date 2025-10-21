@@ -30,7 +30,7 @@ async def main():
     # Create workflow parameters
     workflow_id = f"query-workflow-{uuid4()}"
     params = QueryWorkflowParams(
-        library_id="7297d892-1d28-425c-aa78-7d60d362a968",  # Replace with actual library ID
+        library_id="881a123b-e3f0-4174-b379-b85927bf204a",  # Replace with actual library ID
         query_text="What is machine learning?",  # Your search query
         k=10,
         auto_index=False,  # Set to True to auto-index before querying

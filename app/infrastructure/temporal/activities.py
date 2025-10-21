@@ -43,14 +43,14 @@ async def query_library_activity(params: QueryLibraryParams) -> QueryLibraryResu
     produces the same result.
     """
     # Use HTTP to call the API (activities run in separate process from API)
-    import requests
+    import httpx
 
     activity.logger.info(
         f"Querying library {params.library_id} with k={params.k}"
     )
 
     try:
-        # Call the API via HTTP
+        # Call the API via HTTP using async client
         api_url = "http://localhost:8000"
         query_data = {
             "query_text": params.query_text,
@@ -58,11 +58,11 @@ async def query_library_activity(params: QueryLibraryParams) -> QueryLibraryResu
             "metadata_filters": params.metadata_filters,
         }
 
-        response = requests.post(
-            f"{api_url}/libraries/{params.library_id}/query",
-            json=query_data,
-            timeout=30
-        )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{api_url}/libraries/{params.library_id}/query",
+                json=query_data,
+            )
 
         if response.status_code != 200:
             raise Exception(f"API returned {response.status_code}: {response.text}")
@@ -92,7 +92,7 @@ async def index_library_activity(params: IndexLibraryParams) -> Dict[str, Any]:
     This is a long-running operation that can be retried if it fails.
     """
     # Use HTTP to call the API (activities run in separate process from API)
-    import requests
+    import httpx
 
     activity.logger.info(
         f"Indexing library {params.library_id} with type {params.index_type}"
@@ -101,13 +101,13 @@ async def index_library_activity(params: IndexLibraryParams) -> Dict[str, Any]:
     try:
         start_time = time.time()
 
-        # Call the API via HTTP
+        # Call the API via HTTP using async client
         api_url = "http://localhost:8000"
-        response = requests.post(
-            f"{api_url}/libraries/{params.library_id}/index",
-            json={"index_type": params.index_type},
-            timeout=600  # 10 minutes for indexing
-        )
+        async with httpx.AsyncClient(timeout=600.0) as client:  # 10 minutes for indexing
+            response = await client.post(
+                f"{api_url}/libraries/{params.library_id}/index",
+                json={"index_type": params.index_type},
+            )
 
         if response.status_code != 200:
             raise Exception(f"API returned {response.status_code}: {response.text}")
