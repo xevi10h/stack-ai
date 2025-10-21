@@ -63,6 +63,7 @@ app/
 ├── application/     # Application services (use cases)
 ├── infrastructure/  # Infrastructure implementations
 │   ├── indexing/    # Vector indexing algorithms
+│   ├── embeddings/  # Embedding service (Cohere integration)
 │   ├── repositories/ # Data access layer
 │   ├── replication/ # Leader-Follower architecture
 │   ├── temporal/    # Temporal workflows and activities
@@ -71,12 +72,38 @@ app/
 └── sdk/             # Python SDK client library
 ```
 
+### Embedding Service Architecture
+
+The API automatically handles text-to-vector embeddings using Cohere's API:
+
+- **Abstraction Layer**: `EmbeddingService` interface allows swapping embedding providers
+- **Cohere Integration**: Uses `embed-english-light-v3.0` model (384 dimensions)
+- **Automatic Generation**: Embeddings are generated transparently for:
+  - Chunk creation and updates (from text field)
+  - Library queries (from query_text field)
+- **Testing**: Mock embedding service for tests (no API calls needed)
+
+This design keeps embedding complexity internal to the backend, providing a cleaner, more user-friendly API.
+
 ## Quick Start
 
 ### Prerequisites
 
 - Docker and Docker Compose
 - Python 3.13+ (for local development)
+- Cohere API Key (get one free at https://dashboard.cohere.com/api-keys)
+
+### Setup Environment Variables
+
+1. **Copy the example environment file:**
+```bash
+cp .env.example .env
+```
+
+2. **Edit `.env` and add your Cohere API key:**
+```bash
+COHERE_API_KEY=your-actual-api-key-here
+```
 
 ### Option 1: Full Stack with Docker (Recommended)
 
@@ -86,6 +113,8 @@ Run the complete stack including API, Temporal server, worker, and UI:
 docker-compose up --build
 ```
 
+Docker Compose will automatically load variables from your `.env` file.
+
 **Services:**
 - API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
@@ -94,22 +123,32 @@ docker-compose up --build
 
 ### Option 2: Local Development
 
-1. **Install dependencies:**
+1. **Set up environment:**
+```bash
+# Copy and configure .env file
+cp .env.example .env
+# Edit .env and add your COHERE_API_KEY
+
+# Export the variable
+export COHERE_API_KEY="your-api-key-here"
+```
+
+2. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Run the API:**
+3. **Run the API:**
 ```bash
 uvicorn app.main:app --reload
 ```
 
-3. **Run Temporal worker** (optional, in a separate terminal):
+4. **Run Temporal worker** (optional, in a separate terminal):
 ```bash
 python -m app.infrastructure.temporal.worker
 ```
 
-4. **Access services:**
+5. **Access services:**
 - API: http://localhost:8000
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
@@ -132,10 +171,11 @@ curl -X POST http://localhost:8000/libraries \
   -d '{
     "name": "My Research Papers",
     "description": "Collection of AI research papers",
-    "tags": ["research", "ai"],
-    "embedding_dimension": 384
+    "tags": ["research", "ai"]
   }'
 ```
+
+**Note**: The embedding dimension (384) is automatically determined by the embedding service (Cohere).
 
 ### 2. Create a Document
 
@@ -151,20 +191,21 @@ curl -X POST http://localhost:8000/libraries/{library_id}/documents \
   }'
 ```
 
-### 3. Create Chunks with Embeddings
+### 3. Create Chunks (Embeddings Generated Automatically)
 
 ```bash
 curl -X POST http://localhost:8000/libraries/{library_id}/documents/{document_id}/chunks \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "The dominant sequence transduction models...",
-    "embedding": [0.1, 0.2, 0.3, ...],
+    "text": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks...",
     "source": "arxiv.pdf",
     "page_number": 1,
     "tags": ["introduction"],
     "position": 0
   }'
 ```
+
+**Note**: Embeddings are automatically generated from the text using the Cohere embedding API. You don't need to provide them.
 
 ### 4. Index the Library
 
@@ -178,13 +219,13 @@ curl -X POST http://localhost:8000/libraries/{library_id}/index \
 
 Available index types: `flat`, `hnsw`, `ivf`
 
-### 5. Query the Library
+### 5. Query the Library (Using Natural Language)
 
 ```bash
 curl -X POST http://localhost:8000/libraries/{library_id}/query \
   -H "Content-Type: application/json" \
   -d '{
-    "embedding": [0.1, 0.2, 0.3, ...],
+    "query_text": "What are sequence transduction models?",
     "k": 10,
     "metadata_filters": [
       {
@@ -196,22 +237,19 @@ curl -X POST http://localhost:8000/libraries/{library_id}/query \
   }'
 ```
 
-## Generating Embeddings
+**Note**: Query embeddings are automatically generated from your query text using the Cohere embedding API.
 
-Use the provided Cohere API key to generate embeddings for testing:
+## Environment Variables
 
-```python
-import cohere
+To use the embedding features, you need to set your Cohere API key:
 
-co = cohere.Client(<cohere_api_key>)
-
-response = co.embed(
-    texts=["Your text here"],
-    model="embed-english-light-v3.0"
-)
-
-embedding = response.embeddings[0]
+```bash
+export COHERE_API_KEY="your-api-key-here"
 ```
+
+The API uses Cohere's `embed-english-light-v3.0` model (384 dimensions) to generate embeddings automatically for:
+- Chunk text when creating or updating chunks
+- Query text when searching the library
 
 ## Testing
 
@@ -305,10 +343,9 @@ from vector_db_client import VectorDBClient, MetadataFilter
 # Initialize client
 client = VectorDBClient(base_url="http://localhost:8000")
 
-# Create library
+# Create library (embedding dimension auto-determined)
 library = client.create_library(
     name="My Library",
-    embedding_dimension=384,
     tags=["ml", "ai"]
 )
 
@@ -319,10 +356,10 @@ document = client.create_document(
     source="document.pdf"
 )
 
+# Chunk embeddings are generated automatically from text
 chunk = client.create_chunk(
     document_id=document.id,
-    text="Sample text",
-    embedding=[0.1, 0.2, ...],
+    text="The transformer architecture revolutionized natural language processing",
     source="document.pdf",
     position=0
 )
@@ -330,9 +367,10 @@ chunk = client.create_chunk(
 # Index and query
 client.index_library(library.id, index_type="hnsw")
 
+# Query using natural language (embedding generated automatically)
 results, query_time = client.query_library(
     library_id=library.id,
-    query_embedding=[0.1, 0.2, ...],
+    query_text="What is the transformer architecture?",
     k=10,
     metadata_filters=[
         MetadataFilter(field="author", operator="eq", value="John Doe")
@@ -362,12 +400,12 @@ from app.infrastructure.temporal.workflows import QueryWorkflow, QueryWorkflowPa
 # Connect to Temporal
 client = await Client.connect("localhost:7233")
 
-# Start durable query workflow
+# Start durable query workflow with natural language query
 handle = await client.start_workflow(
     QueryWorkflow.run,
     QueryWorkflowParams(
         library_id="library-uuid",
-        query_embedding=[0.1, 0.2, ...],
+        query_text="What are the key features of transformers?",  # Natural language query
         k=10,
         auto_index=True,  # Auto-index if not indexed
         index_type="hnsw"
@@ -419,6 +457,10 @@ stack-ai/
 │   │   │   ├── ivf_index.py   # IVF implementation
 │   │   │   ├── factory.py     # Index factory
 │   │   │   └── utils.py       # Shared utilities
+│   │   ├── embeddings/        # Embedding services
+│   │   │   ├── base.py        # Embedding interface
+│   │   │   ├── cohere_embedding.py  # Cohere integration
+│   │   │   └── mock_embedding.py    # Mock for testing
 │   │   ├── repositories/      # Data access
 │   │   │   ├── base.py        # Repository interfaces
 │   │   │   ├── memory.py      # In-memory implementation

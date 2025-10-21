@@ -31,7 +31,6 @@ def create_chunk(
     chunk = service.create_chunk(
         document_id=document_id,
         text=request.text,
-        embedding=request.embedding,
         source=request.source,
         page_number=request.page_number,
         author=request.author,
@@ -112,7 +111,6 @@ def update_chunk(
     chunk = service.update_chunk(
         chunk_id=chunk_id,
         text=request.text,
-        embedding=request.embedding,
         source=request.source,
         page_number=request.page_number,
         author=request.author,

@@ -9,7 +9,6 @@ class CreateLibraryRequest(BaseModel):
     name: str = Field(min_length=1)
     description: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
-    embedding_dimension: int = Field(gt=0)
 
 
 class UpdateLibraryRequest(BaseModel):
@@ -63,7 +62,6 @@ class DocumentResponse(BaseModel):
 
 class CreateChunkRequest(BaseModel):
     text: str = Field(min_length=1)
-    embedding: List[float] = Field(min_length=1)
     source: str
     page_number: Optional[int] = None
     author: Optional[str] = None
@@ -73,7 +71,6 @@ class CreateChunkRequest(BaseModel):
 
 class UpdateChunkRequest(BaseModel):
     text: Optional[str] = Field(None, min_length=1)
-    embedding: Optional[List[float]] = None
     source: Optional[str] = None
     page_number: Optional[int] = None
     author: Optional[str] = None
@@ -105,7 +102,7 @@ class MetadataFilter(BaseModel):
 
 
 class QueryRequest(BaseModel):
-    embedding: List[float] = Field(min_length=1)
+    query_text: str = Field(min_length=1)
     k: int = Field(gt=0, le=100, default=10)
     metadata_filters: Optional[List[MetadataFilter]] = None
 

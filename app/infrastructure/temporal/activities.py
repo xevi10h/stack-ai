@@ -11,7 +11,7 @@ class QueryLibraryParams:
     """Parameters for querying a library"""
 
     library_id: str
-    query_embedding: List[float]
+    query_text: str
     k: int = 10
     metadata_filters: Optional[List[Dict[str, Any]]] = None
 
@@ -53,7 +53,7 @@ async def query_library_activity(params: QueryLibraryParams) -> QueryLibraryResu
         # Call the API via HTTP
         api_url = "http://localhost:8000"
         query_data = {
-            "embedding": params.query_embedding,
+            "query_text": params.query_text,
             "k": params.k,
             "metadata_filters": params.metadata_filters,
         }

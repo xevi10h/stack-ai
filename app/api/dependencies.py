@@ -1,6 +1,9 @@
 import os
 
 from app.application.services import ChunkService, DocumentService, LibraryService
+from app.infrastructure.embeddings.cohere_embedding import (
+    create_document_embedding_service,
+)
 from app.infrastructure.replication.node import HealthChecker, ReplicationManager
 from app.infrastructure.repositories.memory import (
     InMemoryChunkRepository,
@@ -35,9 +38,16 @@ else:
     _document_repo = _local_document_repo
     _chunk_repo = _local_chunk_repo
 
-_library_service = LibraryService(_library_repo, _document_repo, _chunk_repo)
+# Initialize embedding service
+_embedding_service = create_document_embedding_service()
+
+_library_service = LibraryService(
+    _library_repo, _document_repo, _chunk_repo, _embedding_service
+)
 _document_service = DocumentService(_library_repo, _document_repo, _chunk_repo)
-_chunk_service = ChunkService(_library_repo, _document_repo, _chunk_repo)
+_chunk_service = ChunkService(
+    _library_repo, _document_repo, _chunk_repo, _embedding_service
+)
 
 
 def get_library_service() -> LibraryService:

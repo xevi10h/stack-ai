@@ -31,7 +31,6 @@ def create_library(
         name=request.name,
         description=request.description,
         tags=request.tags,
-        embedding_dimension=request.embedding_dimension,
     )
 
     return LibraryResponse(
@@ -160,7 +159,7 @@ def query_library(
 ):
     results, query_time = service.query_library(
         library_id=library_id,
-        query_embedding=request.embedding,
+        query_text=request.query_text,
         k=request.k,
         metadata_filters=request.metadata_filters,
     )

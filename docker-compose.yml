@@ -9,6 +9,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - REPLICATION_ENABLED=false
+      - COHERE_API_KEY=${COHERE_API_KEY}
     volumes:
       - ./app:/app/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -79,6 +80,8 @@ services:
     build: .
     environment:
       - PYTHONPATH=/app
+      - TEMPORAL_HOST=temporal:7233
+      - COHERE_API_KEY=${COHERE_API_KEY}
     volumes:
       - ./app:/app/app
     command: python -m app.infrastructure.temporal.worker

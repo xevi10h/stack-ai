@@ -12,3 +12,4 @@ black==25.9.0
 isort==7.0.0
 pylint==4.0.1
 temporalio==1.8.0
+cohere==5.11.4

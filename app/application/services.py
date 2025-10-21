@@ -18,6 +18,7 @@ from app.domain.models import (
     Library,
     LibraryMetadata,
 )
+from app.infrastructure.embeddings.base import EmbeddingService
 from app.infrastructure.indexing.base import VectorIndex
 from app.infrastructure.indexing.factory import IndexFactory
 from app.infrastructure.repositories.base import (
@@ -33,10 +34,12 @@ class LibraryService:
         library_repo: LibraryRepository,
         document_repo: DocumentRepository,
         chunk_repo: ChunkRepository,
+        embedding_service: EmbeddingService,
     ):
         self._library_repo = library_repo
-        self._document_repo = document_repo  
+        self._document_repo = document_repo
         self._chunk_repo = chunk_repo
+        self._embedding_service = embedding_service
         self._indexes: dict[UUID, VectorIndex] = {}
 
     def create_library(
@@ -44,8 +47,10 @@ class LibraryService:
         name: str,
         description: Optional[str],
         tags: List[str],
-        embedding_dimension: int,
     ) -> Library:
+        # Automatically determine embedding dimension from the embedding service
+        embedding_dimension = self._embedding_service.get_dimension()
+
         metadata = LibraryMetadata(
             name=name,
             description=description,
@@ -128,7 +133,7 @@ class LibraryService:
     def query_library(
         self,
         library_id: UUID,
-        query_embedding: List[float],
+        query_text: str,
         k: int,
         metadata_filters: Optional[List[MetadataFilter]] = None,
     ) -> Tuple[List[Tuple[Chunk, float]], float]:
@@ -136,6 +141,10 @@ class LibraryService:
 
         if not library.is_indexed:
             raise LibraryNotIndexedError(library_id)
+
+        # Generate embedding from query text using the query embedding service
+        # Note: We use a separate embedding service configured for queries
+        query_embedding = self._embedding_service.embed_text(query_text)
 
         if len(query_embedding) != library.metadata.embedding_dimension:
             raise InvalidEmbeddingDimensionError(
@@ -309,16 +318,17 @@ class ChunkService:
         library_repo: LibraryRepository,
         document_repo: DocumentRepository,
         chunk_repo: ChunkRepository,
+        embedding_service: EmbeddingService,
     ):
         self._library_repo = library_repo
         self._document_repo = document_repo
         self._chunk_repo = chunk_repo
+        self._embedding_service = embedding_service
 
     def create_chunk(
         self,
         document_id: UUID,
         text: str,
-        embedding: List[float],
         source: str,
         page_number: Optional[int],
         author: Optional[str],
@@ -332,6 +342,9 @@ class ChunkService:
         library = self._library_repo.get(document.library_id)
         if not library:
             raise EntityNotFoundError("Library", document.library_id)
+
+        # Generate embedding from text automatically
+        embedding = self._embedding_service.embed_text(text)
 
         if len(embedding) != library.metadata.embedding_dimension:
             raise InvalidEmbeddingDimensionError(
@@ -381,7 +394,6 @@ class ChunkService:
         self,
         chunk_id: UUID,
         text: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
         source: Optional[str] = None,
         page_number: Optional[int] = None,
         author: Optional[str] = None,
@@ -398,7 +410,11 @@ class ChunkService:
         if not library:
             raise EntityNotFoundError("Library", document.library_id)
 
-        if embedding is not None:
+        # If text is updated, regenerate embedding
+        if text is not None:
+            chunk.text = text
+            # Automatically regenerate embedding when text changes
+            embedding = self._embedding_service.embed_text(text)
             if len(embedding) != library.metadata.embedding_dimension:
                 raise InvalidEmbeddingDimensionError(
                     library.metadata.embedding_dimension,
@@ -406,8 +422,6 @@ class ChunkService:
                 )
             chunk.embedding = embedding
 
-        if text is not None:
-            chunk.text = text
         if source is not None:
             chunk.metadata.source = source
         if page_number is not None:

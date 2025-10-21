@@ -19,14 +19,13 @@ def test_create_library():
             "name": "Test Library",
             "description": "A test library",
             "tags": ["test"],
-            "embedding_dimension": 384,
         },
     )
 
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Test Library"
-    assert data["embedding_dimension"] == 384
+    assert data["embedding_dimension"] == 384  # Auto-determined from embedding service
     assert data["is_indexed"] is False
 
 
@@ -37,7 +36,6 @@ def test_create_and_query_library():
             "name": "Query Test Library",
             "description": "Testing queries",
             "tags": ["test"],
-            "embedding_dimension": 3,
         },
     )
     assert library_response.status_code == 201
@@ -57,8 +55,7 @@ def test_create_and_query_library():
     chunk_response = client.post(
         f"/libraries/{library_id}/documents/{document_id}/chunks",
         json={
-            "text": "This is a test chunk",
-            "embedding": [1.0, 0.0, 0.0],
+            "text": "This is a test chunk about machine learning",
             "source": "test.pdf",
             "tags": ["test"],
             "position": 0,
@@ -76,7 +73,7 @@ def test_create_and_query_library():
     query_response = client.post(
         f"/libraries/{library_id}/query",
         json={
-            "embedding": [1.0, 0.0, 0.0],
+            "query_text": "machine learning test",
             "k": 10,
         },
     )
@@ -97,7 +94,6 @@ def test_update_library():
         "/libraries",
         json={
             "name": "Original Name",
-            "embedding_dimension": 384,
         },
     )
     library_id = create_response.json()["id"]
@@ -116,7 +112,6 @@ def test_delete_library():
         "/libraries",
         json={
             "name": "To Delete",
-            "embedding_dimension": 384,
         },
     )
     library_id = create_response.json()["id"]
@@ -133,12 +128,12 @@ def test_library_not_found():
     assert response.status_code == 404
 
 
-def test_invalid_embedding_dimension():
+def test_chunk_creation():
+    """Test that chunks are created successfully with auto-generated embeddings"""
     library_response = client.post(
         "/libraries",
         json={
             "name": "Test Library",
-            "embedding_dimension": 3,
         },
     )
     library_id = library_response.json()["id"]
@@ -152,14 +147,16 @@ def test_invalid_embedding_dimension():
     chunk_response = client.post(
         f"/libraries/{library_id}/documents/{document_id}/chunks",
         json={
-            "text": "Test",
-            "embedding": [1.0, 0.0],
+            "text": "This is a test chunk with some content",
             "source": "test.pdf",
             "position": 0,
         },
     )
 
-    assert chunk_response.status_code == 400
+    assert chunk_response.status_code == 201
+    chunk_data = chunk_response.json()
+    assert chunk_data["text"] == "This is a test chunk with some content"
+    assert len(chunk_data["embedding"]) == 384  # Auto-generated with correct dimension
 
 
 def test_query_unindexed_library():
@@ -167,7 +164,6 @@ def test_query_unindexed_library():
         "/libraries",
         json={
             "name": "Unindexed Library",
-            "embedding_dimension": 3,
         },
     )
     library_id = library_response.json()["id"]
@@ -175,7 +171,7 @@ def test_query_unindexed_library():
     query_response = client.post(
         f"/libraries/{library_id}/query",
         json={
-            "embedding": [1.0, 0.0, 0.0],
+            "query_text": "test query",
             "k": 10,
         },
     )
